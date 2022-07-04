@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "48409509686",
+    "firebase_url": "https://flutter-learn-crashlyst-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "flutter-learn-crashlyst",
+    "storage_bucket": "flutter-learn-crashlyst.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:48409509686:android:cbea8a6006423cadaefd97",
+        "android_client_info": {
+          "package_name": "com.example.crashlystic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "48409509686-b6kl8flurh64p4674eldag1fhboq39in.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzdxXIbdQobTHh1VF0FURTJiqvtc0mvkc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "48409509686-b6kl8flurh64p4674eldag1fhboq39in.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "48409509686-pt549te385d7p2pvfmi4jb7e5k6m48td.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.crashlystic"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
