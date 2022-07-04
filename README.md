@@ -100,7 +100,7 @@ flutterfire configure
 flutter run
 ```
 ### Step 2: Handle our error from Flutter application
-1. Import some necessary library:
+1. Import some necessary libraries:
 ```Dart
 // For Connecting Firebase Project to our Flutter Project
 import 'firebase_options.dart';
