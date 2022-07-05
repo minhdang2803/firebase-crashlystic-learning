@@ -298,3 +298,15 @@ FirebaseCrashlytics.instance.setCustomKey("float_key", 1.0f);
 FirebaseCrashlytics.instance.setCustomKey("double_key", 1.0);
 ```
 #### Add custom log messages
+To give more content for the state that leading up to errors, we can add custom log message to Firebase console, 
+>**_NOTE:_**
+To avoid slowing down the application, Crashlystic only allow to add a log less or equal than 64KB and delete the rest of logs which is end of sessions (already fixed, too old.)
+```Dart
+FirebaseCrashlytics.instance.log("Higgs-Boson detected! Bailing out");
+```
+
+#### Set user identifiers
+To diagnose an issue, it’s often helpful to know which of your users experienced a given crash. Crashlytics includes a way to anonymously identify users in your crash reports, we can add user IDs to your reports by ssign each user a unique identifier in the form of an ID number, token, or hashed value:
+```Dart
+FirebaseCrashlytics.instance.setUserIdentifier("12345");
+```
