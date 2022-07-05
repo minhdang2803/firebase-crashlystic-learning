@@ -168,4 +168,133 @@ TextButton(
 4. Go to the [Crashlytics dashboard](https://accounts.google.com/ServiceLogin/signinchooser?passive=1209600&osid=1&continue=https%3A%2F%2Fconsole.firebase.google.com%2Fproject%2F_%2Fcrashlytics&followup=https%3A%2F%2Fconsole.firebase.google.com%2Fproject%2F_%2Fcrashlytics&flowName=GlifWebSignIn&flowEntry=ServiceLogin) of the Firebase console to see your test crash.
     -   If you've refreshed the console and you're still not seeing the test crash after five minutes, enable debug logging to see if your app is sending crash reports
 
-## Customize our crash reports using Crashlytics APIs
+## Customize our crash reports using Crashlystic APIs
+Firebase Crashlystic collects all the platform-native crash reports for all your app's users, this application provides **five logging mechanisms** out of the box - which means they are not thrown by Flutter - are:
+-   Custom keys
+-   Custom logs
+-   User identifiers
+-   Caught exceptions 
+-   Uncaught exceptions
+
+There are two kind of reports in Flutter apps:
+-   Fatal reports
+-   Non-Fatal reports
+
+Fatal reports are sents to Crashlystic in **real-time**, user no need to restart the application. On the other hand, Non-fatal reports are **written to disk** and will be sent when:
+-   Next fatel report sent to Crashlystic
+-   When the app restarted
+### Handling errors mechanism in Flutter
+The Flutter framework catches errors that **occur during callbacks** triggered by the framework itself, including errors encountered during the build, layout, and paint phases.
+
+All errors that are caught by Flutter are routed to the ```FlutterError.onError```. By default, Flutter calls ```FlutterError.presentError``` which will present the error to the devices logs.
+On IDE, the inspector overrides that behavior so error will be routed to the IDE's console.
+
+By default, in debug mode this shows an error message in red, and in release mode this shows a gray background.
+
+For an example, we create an application that exit immediately when an error occur in release mode:
+
+```Dart
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
+void main() {
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    if (kReleaseMode) exit(1);
+  };
+  runApp(MyApp());
+}
+// rest of `flutter create` code...
+```
+### Reporting uncaugth errors
+#### By the Zone with traditional method
+
+Errors which do not occurs inside callback (asynchronus errors) won't be caught by Flutter, but we can use **Zone** to handle it, which means the errors will be forwarded to the **Zone** where **runApp** was run.
+
+```Dart
+ElevatedButton(
+  onPressed: () {
+    throw Error();
+  }
+  ...
+)
+```
+
+To catch the errros such like the one above, we can use wrapped the ```runZonedGuarded()``` around the ```runApp()```. If in our application, we call ```WidgetsFlutterBinding.ensureInitialized();``` to perform some opreations which can be: **Connect to Firebase**, catch the data using **shared_preferences**, we need to put it inside the ```runZonedGuarded()```.
+
+```Dart
+runZonedGuarded(() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MyApp());
+}, (Object error, StackTrace stack) {
+  myBackend.sendError(error, stack);
+});
+```
+
+#### By the Zone with Crashlystic
+We can also use Zone with Crashlystic:
+```Dart
+void main() async {
+  runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
+    // The following lines are the same as previously explained in "Handling uncaught errors"
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+    runApp(MyApp());
+  }, (error, stack) => FirebaseCrashlytics.instance.recordError(error, stack, fatal: true));
+}
+```
+Or we can easily use Crashlystic to catch the errors that happend outside Flutter context by adding an ```Isolate```:
+```Dart
+Isolate.current.addErrorListener(RawReceivePort((pair) async {
+  final List<dynamic> errorAndStacktrace = pair;
+  await FirebaseCrashlytics.instance.recordError(
+    errorAndStacktrace.first,
+    errorAndStacktrace.last,
+    fatal: true,
+  );
+}).sendPort);
+```
+### Reporting caught errors
+In addition to automatically reporting your app’s crashes, Crashlytics lets you record non-fatal exceptions and sends them to you the next time a fatal event is reported or when the app restarts.
+
+>**NOTE:**
+Crashlytics only stores the most recent eight recorded non-fatal exceptions. If your app throws more than eight, older exceptions are lost. This count is reset each time a fatal exception is thrown, since this causes a report to be sent to Crashlytics.
+
+We will use the ```recordError``` to record a Non-fatal Error, for an example: 
+
+```Dart
+await FirebaseCrashlytics.instance.recordError(
+  error,
+  stackTrace,
+  reason: 'a non-fatal error'
+);
+```
+#### Add custom key
+Custom keys in order to help us get the specific state of our application leading up to a crash, we can **associate arbitatry key/value** pairs with our crash reports, then use custom keys to **search and filter** crash reports in the Firebase console
+
+For an example:
+```Dart
+// Set a key to a string.
+FirebaseCrashlytics.instance.setCustomKey('str_key', 'hello');
+
+// Set a key to a boolean.
+FirebaseCrashlytics.instance.setCustomKey("bool_key", true);
+
+// Set a key to an int.
+FirebaseCrashlytics.instance.setCustomKey("int_key", 1);
+
+// Set a key to a long.
+FirebaseCrashlytics.instance.setCustomKey("int_key", 1L);
+
+// Set a key to a float.
+FirebaseCrashlytics.instance.setCustomKey("float_key", 1.0f);
+
+// Set a key to a double.
+FirebaseCrashlytics.instance.setCustomKey("double_key", 1.0);
+```
+#### Add custom log messages
